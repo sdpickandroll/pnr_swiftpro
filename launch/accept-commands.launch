@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+
+<!-- This launch file is for controlling the Roomba and the uSwift arm with the 3Dconnexion 
+     3D mouse. This session should be launched from the Raspberry Pi. -->
+<!-- The corresponding launch file on the Jetson is 'accept-commands.launch'. 
+     It is so called because with it, the Jetson only accepts incoming vector and Twist messages
+     coming to the 'uswift_vector_write' and 'cmd_vel' topics, respectively. -->
+
+<!-- Written by Joshua Petrin -->
+
+<launch>
+  <!-- Start the Roomba node(s) -->
+  <include file="$(find ca_driver)/launch/create_2.launch" />
+
+  <!-- Start the uSwift node -->
+  <node name="$(anon pnr_swiftpro)" pkg="pnr_swiftpro" type="pnr_swiftpro" />
+</launch>
