@@ -4,3 +4,5 @@
 
 export ROS_MASTER_URI=http://$($SSH_CLIENT | awk {print $1}):11311
 export ROS_IP=192.168.1.5
+
+exec "$@"
