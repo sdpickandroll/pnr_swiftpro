@@ -36,14 +36,14 @@
 // Too many vector commands will flood the uSwift.
 // This variable is set to 'true' every vector_flood_delay seconds.
 bool accept_vector = true;
-double vector_flood_delay = 0.05;
+double vector_flood_delay = 0.5;
 
 // how fast the move commands are executed on the uSwift
 // (10000 is fastest)
 int move_speed;
 
 // time between how often this node publishes a new state (secs)
-double pose_update_period = 0.05;
+double pose_update_period = 0.2;
 
 // publishing clearence, true => ready to publish new state
 bool publish_uswift_state = false;
@@ -139,7 +139,7 @@ void vector_write_callback(const geometry_msgs::Vector3& msg_in)
 
         std::string Gcode = std::string("G2204 X")
             + x + " Y" + y + " Z" + z + " F" + ms + "\n";
-        ROS_INFO("Sending vector command to the uSwift.\n"
+        ROS_DEBUG("Sending vector command to the uSwift.\n"
             "Gcode: %s", Gcode.c_str());
         
         usb->write(Gcode.c_str());
@@ -170,7 +170,7 @@ void cyl_vector_write_callback(const geometry_msgs::Vector3& msg_in)
 
         std::string Gcode = std::string("G2205 S")
             + s + " R" + r + " H" + h + " F" + ms + "\n";
-        ROS_INFO("Sending cyl.vector command to the uSwift.\n"
+        ROS_DEBUG("Sending cyl.vector command to the uSwift.\n"
             "Gcode: %s", Gcode.c_str());
         
         usb->write(Gcode.c_str());
@@ -191,9 +191,6 @@ void actuator_write_callback(const std_msgs::Bool& msg_in)
 {
     us_actuator_on.data = msg_in.data;
 
-    // TODO:
-    // Not sure if this should be M2231 or M2232...
-    // Depends on whether we have the suction or the gripper installed
     std::string Gcode = "M2232 ";
     if (us_actuator_on.data)
         Gcode += "V1";
