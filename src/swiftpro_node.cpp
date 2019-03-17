@@ -12,7 +12,8 @@
 #include <ros/console.h>
 #include <serial/serial.h>
 
-#include <std_msgs/Bool.h> // ?
+#include <std_msgs/Bool.h>
+#include <std_msgs/Float64.h>
 // #include <std_msgs/String.h>
 // #include <std_msgs/Empty.h>
 #include <geometry_msgs/Point.h>
@@ -80,7 +81,20 @@ std_msgs::Bool us_actuator_on;
 // serial object, from the amazing ROS serial package
 serial::Serial *usb;
 
-
+// generic function for writing a string to the serial
+void usbWrite(std::string Gcode) 
+{
+    usb->flush();
+    usb->write(Gcode.c_str());
+    ros::Duration(0.01).sleep();      // wait 0.01s (?)
+    usb->flush();
+    std::string result = usb->read(usb->available());
+    if (result[0] == 'E')
+    {
+        ROS_WARN("Received error from uSwift after the command %s:\n"
+         "%s", Gcode.c_str(), result.c_str());
+    }
+}
 
 void position_write_callback(const geometry_msgs::Point& msg_in)
 {
@@ -99,16 +113,7 @@ void position_write_callback(const geometry_msgs::Point& msg_in)
     ROS_DEBUG("Sending a position command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
 
-    usb->flush();
-    usb->write(Gcode.c_str());
-    ros::Duration(0.01).sleep();      // wait 0.01s (?)
-    usb->flush();
-    std::string result = usb->read(usb->available());
-    if (result[0] == 'E')
-    {
-        ROS_WARN("Received error from uSwift after the command %s:\n"
-         "%s", Gcode.c_str(), result.c_str());
-    }
+    usbWrite(Gcode);
 }
 
 
@@ -131,16 +136,45 @@ void cyl_position_write_callback(const geometry_msgs::Point& msg_in)
     ROS_DEBUG("Sending a cylindrical pos command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
 
-    usb->flush();
-    usb->write(Gcode.c_str());
-    ros::Duration(USB_RESPONSE_TIME).sleep();      // wait some
-    usb->flush();
-    std::string result = usb->read(usb->available());
-    if (result[0] == 'E')
-    {
-        ROS_WARN("Received error from uSwift after the command %s:\n"
-         "%s", Gcode.c_str(), result.c_str());
-    }
+    usbWrite(Gcode);
+}
+
+
+void joint0_write_callback(const std_msgs::Float64& msg_in)
+{
+    char degree[8];
+    sprintf(degree, "%.2f", msg_in.data);
+    std::string Gcode = std::string("G2202 N0 V") + degree + "\n";
+    ROS_DEBUG("Sending joint1 command to the uSwift.\n"
+        "Gcode: %s\n", Gcode.c_str());
+    usbWrite(Gcode);
+}
+void joint1_write_callback(const std_msgs::Float64& msg_in)
+{
+    char degree[8];
+    sprintf(degree, "%.2f", msg_in.data);
+    std::string Gcode = std::string("G2202 N1 V") + degree + "\n";
+    ROS_DEBUG("Sending joint1 command to the uSwift.\n"
+        "Gcode: %s\n", Gcode.c_str());
+    usbWrite(Gcode);
+}
+void joint2_write_callback(const std_msgs::Float64& msg_in)
+{
+    char degree[8];
+    sprintf(degree, "%.2f", msg_in.data);
+    std::string Gcode = std::string("G2202 N1 V") + degree + "\n";
+    ROS_DEBUG("Sending joint1 command to the uSwift.\n"
+        "Gcode: %s\n", Gcode.c_str());
+    usbWrite(Gcode);
+}
+void joint3_write_callback(const std_msgs::Float64& msg_in)
+{
+    char degree[8];
+    sprintf(degree, "%.2f", msg_in.data);
+    std::string Gcode = std::string("G2202 N1 V") + degree + "\n";
+    ROS_DEBUG("Sending joint1 command to the uSwift.\n"
+        "Gcode: %s\n", Gcode.c_str());
+    usbWrite(Gcode);
 }
 
 
@@ -166,20 +200,12 @@ void vector_write_callback(const geometry_msgs::Vector3& msg_in)
         ROS_DEBUG("Sending vector command to the uSwift.\n"
             "Gcode: %s", Gcode.c_str());
 
-        usb->flush();
-        usb->write(Gcode.c_str());
-        ros::Duration(USB_RESPONSE_TIME).sleep();      // wait some
-        usb->flush();
-        std::string result = usb->read(usb->available());
-        if (result[0] == 'E')
-        {
-            ROS_WARN("Received error from uSwift after the command %s:\n"
-             "%s", Gcode.c_str(), result.c_str());
-        }
+        usbWrite(Gcode);
 
         accept_vector = false;
     }
 }
+
 
 void cyl_vector_write_callback(const geometry_msgs::Vector3& msg_in)
 {
@@ -202,16 +228,7 @@ void cyl_vector_write_callback(const geometry_msgs::Vector3& msg_in)
         ROS_DEBUG("Sending cyl.vector command to the uSwift.\n"
             "Gcode: %s", Gcode.c_str());
         
-        usb->flush();
-        usb->write(Gcode.c_str());
-        ros::Duration(USB_RESPONSE_TIME).sleep();      // wait some time (?)
-        usb->flush();
-        std::string result = usb->read(usb->available());
-        if (result[0] == 'E')
-        {
-            ROS_WARN("Received error from uSwift after the command %s:\n"
-             "%s", Gcode.c_str(), result.c_str());
-        }
+        usbWrite(Gcode);
 
         accept_vector = false;
     }
@@ -232,16 +249,7 @@ void actuator_write_callback(const std_msgs::Bool& msg_in)
     ROS_DEBUG("Sending actuator command to the uSwift.\n"
         "Gcode: %s", Gcode.c_str());
         
-    usb->flush();
-    usb->write(Gcode.c_str());
-    ros::Duration(USB_RESPONSE_TIME).sleep();      // wait some time (?)
-    usb->flush();
-    std::string result = usb->read(usb->available());
-    if (result[0] == 'E')
-    {
-        ROS_WARN("Received error from uSwift after the command %s:\n"
-         "%s", Gcode.c_str(), result.c_str());
-    }
+    usbWrite(Gcode);
 }
 
 /**
@@ -328,13 +336,6 @@ void state_read_callback(const ros::TimerEvent&)
 }
 
 
-// TODO: Implement.
-void error_test_callback(const ros::TimerEvent&)
-{
-    // Test to see whether a command produced an error
-}
-
-
 void vector_accept_callback(const ros::TimerEvent&)
 {
     // ROS_DEBUG("Opening the uSwift floodgate");
@@ -343,7 +344,7 @@ void vector_accept_callback(const ros::TimerEvent&)
 
 
 /* 
- * Node name:
+ * Node name: pnr_core
  *   
  *
  * Topics published: (rate = 20Hz, queue size = 1)
@@ -380,6 +381,14 @@ int main(int argc, char** argv)
         nh.subscribe("cyl_vector_write", 1, cyl_vector_write_callback);
     ros::Subscriber atr_sub = 
         nh.subscribe("actuator_write", 1, actuator_write_callback);
+    ros::Subscriber j0_sub = 
+        nh.subscribe("joint0_write", 1, joint0_write_callback);
+    ros::Subscriber j1_sub = 
+        nh.subscribe("joint1_write", 1, joint1_write_callback);
+    ros::Subscriber j2_sub = 
+        nh.subscribe("joint2_write", 1, joint2_write_callback);
+    ros::Subscriber j3_sub = 
+        nh.subscribe("joint3_write", 1, joint3_write_callback);
     // ros::Rate loop_rate(20);
 
     if (!nh.hasParam("port"))
