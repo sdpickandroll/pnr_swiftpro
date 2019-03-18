@@ -150,43 +150,63 @@ void cyl_position_write_callback(const geometry_msgs::Point& msg_in)
 
 void joint0_write_callback(const std_msgs::Float64& msg_in)
 {
-    char degree[8];
-    sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N0 V") 
-        + (joint0 += degree) + " F" + move_speed + "\n";
-    ROS_DEBUG("Sending joint0 command to the uSwift.\n"
-        "Gcode: %s\n", Gcode.c_str());
-    usbWrite(Gcode);
+    if (accept_vector && abs(msg_in.data) > 0.001)
+    {
+        char degree[8];
+        sprintf(degree, "%.2f", msg_in.data);
+        std::string Gcode = std::string("G2202 N0 V") 
+            + (joint0 += degree) + " F" + move_speed + "\n";
+        ROS_DEBUG("Sending joint0 command to the uSwift.\n"
+            "Gcode: %s\n", Gcode.c_str());
+        usbWrite(Gcode);
+
+        accept_vector = false;
+    }
 }
 void joint1_write_callback(const std_msgs::Float64& msg_in)
 {
-    char degree[8];
-    sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N1 V")
-        + (joint1 += degree) + " F" + move_speed + "\n";
-    ROS_DEBUG("Sending joint1 command to the uSwift.\n"
-        "Gcode: %s\n", Gcode.c_str());
-    usbWrite(Gcode);
+    if (accept_vector && abs(msg_in.data) > 0.001)
+    {
+        char degree[8];
+        sprintf(degree, "%.2f", msg_in.data);
+        std::string Gcode = std::string("G2202 N1 V")
+            + (joint1 += degree) + " F" + move_speed + "\n";
+        ROS_DEBUG("Sending joint1 command to the uSwift.\n"
+            "Gcode: %s\n", Gcode.c_str());
+        usbWrite(Gcode);
+
+        accept_vector = false;
+    }
 }
 void joint2_write_callback(const std_msgs::Float64& msg_in)
 {
-    char degree[8];
-    sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N2 V")
-        + (joint2 += degree) + " F" + move_speed + "\n";
-    ROS_DEBUG("Sending joint2 command to the uSwift.\n"
-        "Gcode: %s\n", Gcode.c_str());
-    usbWrite(Gcode);
+    if (accept_vector && abs(msg_in.data) > 0.001)
+    {
+        char degree[8];
+        sprintf(degree, "%.2f", msg_in.data);
+        std::string Gcode = std::string("G2202 N2 V")
+            + (joint2 += degree) + " F" + move_speed + "\n";
+        ROS_DEBUG("Sending joint2 command to the uSwift.\n"
+            "Gcode: %s\n", Gcode.c_str());
+        usbWrite(Gcode);
+
+        accept_vector = false;
+    }
 }
 void joint3_write_callback(const std_msgs::Float64& msg_in)
 {
-    char degree[8];
-    sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N3 V")
-        + (joint3 += degree) + " F" + move_speed + "\n";
-    ROS_DEBUG("Sending joint3 command to the uSwift.\n"
-        "Gcode: %s\n", Gcode.c_str());
-    usbWrite(Gcode);
+    if (accept_vector && abs(msg_in.data) > 0.001)
+    {
+        char degree[8];
+        sprintf(degree, "%.2f", msg_in.data);
+        std::string Gcode = std::string("G2202 N3 V")
+            + (joint3 += degree) + " F" + move_speed + "\n";
+        ROS_DEBUG("Sending joint3 command to the uSwift.\n"
+            "Gcode: %s\n", Gcode.c_str());
+        usbWrite(Gcode);
+
+        accept_vector = false;
+    }
 }
 
 
