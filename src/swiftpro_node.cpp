@@ -36,14 +36,23 @@
 
 
 // number of seconds the uSwift has to say 'ok' in response to a command
-const double USB_RESPONSE_TIME = 0.02;
+const double USB_RESPONSE_TIME = 0.001;
 
 // time delay between ROS spins
 const int ROS_SPIN_PERIOD = 0.001;
 
+// TODO: these are probably wrong
+const double JOINT0_INITIAL = 90.00;
+const double JOINT1_INITIAL = 130.00;
+const double JOINT2_INITIAL = 45.00;
+double joint0 = JOINT0_INITIAL;
+double joint1 = JOINT1_INITIAL;
+double joint2 = JOINT2_INITIAL;
+
 
 // rosparam-dependent values
 // -----
+
 // Too many vector commands will flood the uSwift.
 // This variable is set to 'true' every vector_flood_delay seconds.
 bool accept_vector = true;
@@ -69,13 +78,10 @@ const std::string USB_PORT_DEFAULT = "/dev/ttyACM0";
 std::string usb_port = USB_PORT_DEFAULT;
 
 
-
 // published values
 pnr_swiftpro::uSwiftState us_state;
 geometry_msgs::Point us_pos;
 std_msgs::Bool us_actuator_on;
-
-
 
 
 // serial object, from the amazing ROS serial package
@@ -144,8 +150,8 @@ void joint0_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N0 V") + degree + "\n";
-    ROS_DEBUG("Sending joint1 command to the uSwift.\n"
+    std::string Gcode = std::string("G2202 N0 V") + (degree -=  + "\n";
+    ROS_DEBUG("Sending joint0 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
 }
@@ -162,8 +168,8 @@ void joint2_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N1 V") + degree + "\n";
-    ROS_DEBUG("Sending joint1 command to the uSwift.\n"
+    std::string Gcode = std::string("G2202 N2 V") + degree + "\n";
+    ROS_DEBUG("Sending joint2 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
 }
@@ -171,8 +177,8 @@ void joint3_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N1 V") + degree + "\n";
-    ROS_DEBUG("Sending joint1 command to the uSwift.\n"
+    std::string Gcode = std::string("G2202 N3 V") + degree + "\n";
+    ROS_DEBUG("Sending joint3 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
 }
