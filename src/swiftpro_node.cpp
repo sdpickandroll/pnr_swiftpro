@@ -45,9 +45,11 @@ const int ROS_SPIN_PERIOD = 0.001;
 const double JOINT0_INITIAL = 90.00;
 const double JOINT1_INITIAL = 130.00;
 const double JOINT2_INITIAL = 45.00;
+const double JOINT3_INITIAL = 45.00;
 double joint0 = JOINT0_INITIAL;
 double joint1 = JOINT1_INITIAL;
 double joint2 = JOINT2_INITIAL;
+double joint3 = JOINT3_INITIAL;
 
 
 // rosparam-dependent values
@@ -150,7 +152,8 @@ void joint0_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N0 V") + (degree -=  + "\n";
+    std::string Gcode = std::string("G2202 N0 V") 
+        + (joint0 += degree) + " F" + move_speed + "\n";
     ROS_DEBUG("Sending joint0 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
@@ -159,7 +162,8 @@ void joint1_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N1 V") + degree + "\n";
+    std::string Gcode = std::string("G2202 N1 V")
+        + (joint1 += degree) + " F" + move_speed + "\n";
     ROS_DEBUG("Sending joint1 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
@@ -168,7 +172,8 @@ void joint2_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N2 V") + degree + "\n";
+    std::string Gcode = std::string("G2202 N2 V")
+        + (joint2 += degree) + " F" + move_speed + "\n";
     ROS_DEBUG("Sending joint2 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
@@ -177,7 +182,8 @@ void joint3_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N3 V") + degree + "\n";
+    std::string Gcode = std::string("G2202 N3 V")
+        + (joint3 += degree) + " F" + move_speed + "\n";
     ROS_DEBUG("Sending joint3 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
