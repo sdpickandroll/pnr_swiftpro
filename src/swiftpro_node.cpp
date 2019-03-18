@@ -144,7 +144,8 @@ void joint0_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N0 V") + degree + "\n";
+    std::string Gcode = std::string("G2202 N0 V")
+        + degree + " F" + move_speed + "\n";
     ROS_DEBUG("Sending joint1 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
@@ -153,7 +154,8 @@ void joint1_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N1 V") + degree + "\n";
+    std::string Gcode = std::string("G2202 N1 V")
+        + degree + " F" + move_speed + "\n";
     ROS_DEBUG("Sending joint1 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
@@ -162,7 +164,8 @@ void joint2_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N1 V") + degree + "\n";
+    std::string Gcode = std::string("G2202 N2 V")
+        + degree + " F" + move_speed + "\n";
     ROS_DEBUG("Sending joint1 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
@@ -171,7 +174,8 @@ void joint3_write_callback(const std_msgs::Float64& msg_in)
 {
     char degree[8];
     sprintf(degree, "%.2f", msg_in.data);
-    std::string Gcode = std::string("G2202 N1 V") + degree + "\n";
+    std::string Gcode = std::string("G2202 N3 V")
+        + degree + " F" + move_speed + "\n";
     ROS_DEBUG("Sending joint1 command to the uSwift.\n"
         "Gcode: %s\n", Gcode.c_str());
     usbWrite(Gcode);
