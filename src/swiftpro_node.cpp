@@ -42,10 +42,10 @@ const double USB_RESPONSE_TIME = 0.001;
 const int ROS_SPIN_PERIOD = 0.001;
 
 // TODO: these are probably wrong
-const double JOINT0_INITIAL = 90.00;
-const double JOINT1_INITIAL = 130.00;
-const double JOINT2_INITIAL = 45.00;
-const double JOINT3_INITIAL = 45.00;
+const double JOINT0_INITIAL = 85.0;
+const double JOINT1_INITIAL = 117.0;
+const double JOINT2_INITIAL = 45.0;
+const double JOINT3_INITIAL = 45.0;
 double joint0 = JOINT0_INITIAL;
 double joint1 = JOINT1_INITIAL;
 double joint2 = JOINT2_INITIAL;
@@ -153,9 +153,14 @@ void joint0_write_callback(const std_msgs::Float64& msg_in)
     if (accept_vector && abs(msg_in.data) > 0.001)
     {
         char degree[8];
+        char joint[8];
+        char ms[8];
+        joint0 += msg_in.data;
         sprintf(degree, "%.2f", msg_in.data);
-        std::string Gcode = std::string("G2202 N0 V") 
-            + (joint0 += degree) + " F" + move_speed + "\n";
+        sprintf(joint, "%.2f", joint0);
+        sprintf(ms, "%i", move_speed);
+        std::string Gcode = std::string("G2202 N0 V")
+            + joint + " F" + ms + "\n";
         ROS_DEBUG("Sending joint0 command to the uSwift.\n"
             "Gcode: %s\n", Gcode.c_str());
         usbWrite(Gcode);
@@ -168,9 +173,14 @@ void joint1_write_callback(const std_msgs::Float64& msg_in)
     if (accept_vector && abs(msg_in.data) > 0.001)
     {
         char degree[8];
+        char joint[8];
+        char ms[8];
+        joint1 += msg_in.data;
         sprintf(degree, "%.2f", msg_in.data);
+        sprintf(joint, "%.2f", joint1);
+        sprintf(ms, "%i", move_speed);
         std::string Gcode = std::string("G2202 N1 V")
-            + (joint1 += degree) + " F" + move_speed + "\n";
+          + joint + " F" + ms + "\n";
         ROS_DEBUG("Sending joint1 command to the uSwift.\n"
             "Gcode: %s\n", Gcode.c_str());
         usbWrite(Gcode);
@@ -183,9 +193,14 @@ void joint2_write_callback(const std_msgs::Float64& msg_in)
     if (accept_vector && abs(msg_in.data) > 0.001)
     {
         char degree[8];
+        char joint[8];
+        char ms[8];
+        joint2 += msg_in.data;
         sprintf(degree, "%.2f", msg_in.data);
+        sprintf(joint, "%.2f", joint2);
+        sprintf(ms, "%i", move_speed);
         std::string Gcode = std::string("G2202 N2 V")
-            + (joint2 += degree) + " F" + move_speed + "\n";
+          + joint + " F" + ms + "\n";
         ROS_DEBUG("Sending joint2 command to the uSwift.\n"
             "Gcode: %s\n", Gcode.c_str());
         usbWrite(Gcode);
@@ -198,9 +213,14 @@ void joint3_write_callback(const std_msgs::Float64& msg_in)
     if (accept_vector && abs(msg_in.data) > 0.001)
     {
         char degree[8];
+        char joint[8];
+        char ms[8];
+        joint3 += msg_in.data;
         sprintf(degree, "%.2f", msg_in.data);
+        sprintf(joint, "%.2f", joint3);
+        sprintf(ms, "%i", move_speed);
         std::string Gcode = std::string("G2202 N3 V")
-            + (joint3 += degree) + " F" + move_speed + "\n";
+          + joint + " F" + ms + "\n";
         ROS_DEBUG("Sending joint3 command to the uSwift.\n"
             "Gcode: %s\n", Gcode.c_str());
         usbWrite(Gcode);
@@ -280,16 +300,16 @@ void actuator_write_callback(const std_msgs::Bool& msg_in)
 
     ROS_DEBUG("Sending actuator command to the uSwift.\n"
         "Gcode: %s", Gcode.c_str());
-        
+
     usbWrite(Gcode);
 }
 
 /**
- * TODO: Document this confusing document (lol) 
+ * TODO: Document this confusing document
  */
 void state_read_callback(const ros::TimerEvent&)
 {
-    // I'm not sure if it's possible to get the state of 
+    // I'm not sure if it's possible to get the state of
     // all the joints from the uSwift, so for now, we'll just
     // do the actuator angle and the end effector position.
 
