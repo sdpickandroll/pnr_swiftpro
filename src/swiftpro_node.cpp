@@ -2,8 +2,8 @@
  * Software License Agreement:
  * do whatever teh crap you want with this software
  * just mention my name if you use it, bitte
- * 
- * Author: Joshua Petrin <joshua.m.petrin@vanderbilt.edu>     
+ *
+ * Author: Joshua Petrin <joshua.m.petrin@vanderbilt.edu>
  */
 #include <cstdlib>
 #include <string>
@@ -45,7 +45,7 @@ const int ROS_SPIN_PERIOD = 0.001;
 const double JOINT0_INITIAL = 85.0;
 const double JOINT1_INITIAL = 117.0;
 const double JOINT2_INITIAL = 45.0;
-const double JOINT3_INITIAL = 45.0;
+const double JOINT3_INITIAL = 90.0;
 double joint0 = JOINT0_INITIAL;
 double joint1 = JOINT1_INITIAL;
 double joint2 = JOINT2_INITIAL;
@@ -55,17 +55,10 @@ double joint3 = JOINT3_INITIAL;
 // rosparam-dependent values
 // -----
 
-// Too many vector commands will flood the uSwift.
-// This variable is set to 'true' every vector_flood_delay seconds.
-bool accept_vector = true;
-
-const double VECTOR_FLOOD_DELAY_DEFAULT = 0.2;
-double vector_flood_delay = VECTOR_FLOOD_DELAY_DEFAULT;
-
 
 // how fast the move commands are executed on the uSwift
 // (10000 is fastest, 0 is slowest I guess)
-const int MOVE_SPEED_DEFAULT = 8000;
+const int MOVE_SPEED_DEFAULT = 1000;
 int move_speed;
 
 // time between how often this node publishes a new state (secs)
@@ -90,7 +83,7 @@ std_msgs::Bool us_actuator_on;
 serial::Serial *usb;
 
 // generic function for writing a string to the serial
-void usbWrite(std::string Gcode) 
+int usbWrite(std::string Gcode)
 {
     usb->flush();
     usb->write(Gcode.c_str());
@@ -101,7 +94,9 @@ void usbWrite(std::string Gcode)
     {
         ROS_WARN("Received error from uSwift after the command %s:\n"
          "%s", Gcode.c_str(), result.c_str());
+        return 1;
     }
+    return 0;
 }
 
 void position_write_callback(const geometry_msgs::Point& msg_in)
@@ -150,7 +145,7 @@ void cyl_position_write_callback(const geometry_msgs::Point& msg_in)
 
 void joint0_write_callback(const std_msgs::Float64& msg_in)
 {
-    if (accept_vector && abs(msg_in.data) > 0.001)
+    if (abs(msg_in.data) > 0.001)
     {
         char degree[8];
         char joint[8];
@@ -164,13 +159,11 @@ void joint0_write_callback(const std_msgs::Float64& msg_in)
         ROS_DEBUG("Sending joint0 command to the uSwift.\n"
             "Gcode: %s\n", Gcode.c_str());
         usbWrite(Gcode);
-
-        accept_vector = false;
     }
 }
 void joint1_write_callback(const std_msgs::Float64& msg_in)
 {
-    if (accept_vector && abs(msg_in.data) > 0.001)
+    if (abs(msg_in.data) > 0.001)
     {
         char degree[8];
         char joint[8];
@@ -184,13 +177,11 @@ void joint1_write_callback(const std_msgs::Float64& msg_in)
         ROS_DEBUG("Sending joint1 command to the uSwift.\n"
             "Gcode: %s\n", Gcode.c_str());
         usbWrite(Gcode);
-
-        accept_vector = false;
     }
 }
 void joint2_write_callback(const std_msgs::Float64& msg_in)
 {
-    if (accept_vector && abs(msg_in.data) > 0.001)
+    if (abs(msg_in.data) > 0.001)
     {
         char degree[8];
         char joint[8];
@@ -204,13 +195,11 @@ void joint2_write_callback(const std_msgs::Float64& msg_in)
         ROS_DEBUG("Sending joint2 command to the uSwift.\n"
             "Gcode: %s\n", Gcode.c_str());
         usbWrite(Gcode);
-
-        accept_vector = false;
     }
 }
 void joint3_write_callback(const std_msgs::Float64& msg_in)
 {
-    if (accept_vector && abs(msg_in.data) > 0.001)
+    if (abs(msg_in.data) > 0.001)
     {
         char degree[8];
         char joint[8];
@@ -224,18 +213,15 @@ void joint3_write_callback(const std_msgs::Float64& msg_in)
         ROS_DEBUG("Sending joint3 command to the uSwift.\n"
             "Gcode: %s\n", Gcode.c_str());
         usbWrite(Gcode);
-
-        accept_vector = false;
     }
 }
 
 
 void vector_write_callback(const geometry_msgs::Vector3& msg_in)
 {
-    if (accept_vector && 
-        (abs(msg_in.x) > 0.001 || 
-         abs(msg_in.y) > 0.001 || 
-         abs(msg_in.z) > 0.001))
+    if (abs(msg_in.x) > 0.001 || 
+        abs(msg_in.y) > 0.001 || 
+        abs(msg_in.z) > 0.001)
     {
         char x[8];
         char y[8];
@@ -253,18 +239,15 @@ void vector_write_callback(const geometry_msgs::Vector3& msg_in)
             "Gcode: %s", Gcode.c_str());
 
         usbWrite(Gcode);
-
-        accept_vector = false;
     }
 }
 
 
 void cyl_vector_write_callback(const geometry_msgs::Vector3& msg_in)
 {
-    if (accept_vector && 
-        (abs(msg_in.x) > 0.001 || 
-         abs(msg_in.y) > 0.001 || 
-         abs(msg_in.z) > 0.001))
+    if (abs(msg_in.x) > 0.001 || 
+        abs(msg_in.y) > 0.001 || 
+        abs(msg_in.z) > 0.001)
     {
         char s[8];
         char r[8];
@@ -279,10 +262,8 @@ void cyl_vector_write_callback(const geometry_msgs::Vector3& msg_in)
             + s + " R" + r + " H" + h + " F" + ms + "\n";
         ROS_DEBUG("Sending cyl.vector command to the uSwift.\n"
             "Gcode: %s", Gcode.c_str());
-        
-        usbWrite(Gcode);
 
-        accept_vector = false;
+        usbWrite(Gcode);
     }
 }
 
@@ -388,13 +369,6 @@ void state_read_callback(const ros::TimerEvent&)
 }
 
 
-void vector_accept_callback(const ros::TimerEvent&)
-{
-    // ROS_DEBUG("Opening the uSwift floodgate");
-    accept_vector = true;
-}
-
-
 /* 
  * Node name: pnr_core
  *   
@@ -456,13 +430,9 @@ int main(int argc, char** argv)
         ROS_WARN("One-time defaulting to /pnr_swiftpro/pose_update_period = %.2f.",
             POSE_UPDATE_PERIOD_DEFAULT);
     nh.param<double>(
-        "pose_update_period", 
-        pose_update_period, 
+        "pose_update_period",
+        pose_update_period,
         POSE_UPDATE_PERIOD_DEFAULT);
-
-    if (!nh.hasParam("vector_flood_delay"))
-        ROS_WARN("Defaulting to /pnr_swiftpro/vector_flood_delay = %.2f.", 
-            VECTOR_FLOOD_DELAY_DEFAULT);
 
     ros::Duration(3.5).sleep();  // wait 3.5s (???)
 
@@ -470,7 +440,7 @@ int main(int argc, char** argv)
     {
         usb = new serial::Serial(
             usb_port, // TODO: Make a program that will test the ports for the uSwift
-            115200, 
+            115200,
             serial::Timeout::simpleTimeout(250));
     }
     catch (serial::IOException& e)
@@ -479,7 +449,7 @@ int main(int argc, char** argv)
         ROS_ERROR_STREAM("Trace: " << e.what());
         return -1;
     }
-    
+
     if (usb->isOpen())
     {
         ROS_INFO_STREAM("uSwift's USB port has been opened successfully");
@@ -494,6 +464,7 @@ int main(int argc, char** argv)
         std::string result = usb->read(usb->available());
         ROS_INFO("uSwift startup message: \n%s", result.c_str());
 
+        // perform set up operations
         ros::Duration(0.5).sleep();       // wait 0.5s
         usb->write("G0 X50 Y0 Z50 F1000\n"); // move to the uncalibrated "home" position
                                           // TODO: Learn how to calibrate this mugger
@@ -506,9 +477,17 @@ int main(int argc, char** argv)
             ROS_WARN("Received error from uSwift after the command %s:\n"
                 "%s", "G0 X50 Y0 Z50 F1000\n", result.c_str());
         }
-        usb->flush();
-
         ros::Duration(0.1).sleep();     // wait 0.1s
+        usb->flush();
+        usb->write("G2202 N3 V90 F1000\n");  // move the claw to point straight
+        usb->flush();
+        ros::Duration(0.1).sleep();     // wait 0.1s
+        result = usb->read(usb->available());
+        if (result[0] == 'E')
+        {
+          ROS_WARN("Received error from uSwift after the command %s:\n"
+                   "%s", "G2202 N3 V90 F1000", result.c_str());
+        }
 
         // Ask for position updates every pose_update_period seconds.
         char pus_msg[50];
@@ -516,8 +495,11 @@ int main(int argc, char** argv)
 
         ROS_INFO("Sending feedback command to the uSwift.\n"
             "Gcode: %s", pus_msg);
+        ros::Duration(0.1).sleep();     // wait 0.1s
+        usb->flush();
         usb->write(pus_msg);
         ros::Duration(pose_update_period).sleep(); // wait for an update?
+        usb->flush();
         // ros::Duration(0.01).sleep();     // wait 0.01s
         result = usb->read(usb->available());
         if (result[0] == 'E')
@@ -530,26 +512,18 @@ int main(int argc, char** argv)
         // initialize and start timers
 
         // the uSwift's position update timer
-        ros::Timer pos_update_timer 
+        // this is a 'best-effort' timing strategy
+        ros::Timer pos_update_timer
             = nh.createTimer(
                 ros::Duration(pose_update_period), 
                 state_read_callback);
-
-        // the vector timer update manager (ensure the vectors don't flood)
-        ros::Timer vec_timer_manager
-            = nh.createTimer(
-                ros::Duration(vector_flood_delay), 
-                vector_accept_callback);
 
         // program loop: wait for callbacks and publish when we are ready
         while (ros::ok())
         {
             // update rosparams
             nh.param<int>("move_speed", move_speed, MOVE_SPEED_DEFAULT);
-            nh.param<double>("vector_flood_delay", 
-                vector_flood_delay, 
-                VECTOR_FLOOD_DELAY_DEFAULT);
-            
+
             if (publish_uswift_state)
             {
                 us_state_pub.publish(us_state);
@@ -557,13 +531,12 @@ int main(int argc, char** argv)
                 us_actuator_on_pub.publish(us_actuator_on);
                 publish_uswift_state = false;
             }
-            
+
             ros::spinOnce();
 
             ros::Duration(ROS_SPIN_PERIOD).sleep();
         }
     }
 
-    
-    return 0;  // Трахни грудь моей женщины! 
+    return 0;  // Трахни грудь моей женщины!
 }
