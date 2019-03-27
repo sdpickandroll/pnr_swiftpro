@@ -12,6 +12,7 @@
 #include <ros/console.h>
 #include <serial/serial.h>
 
+#include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 // #include <std_msgs/String.h>
@@ -25,7 +26,7 @@
 /*
  * For reference...
  * The uSwift's error codes are the following:
- * 
+ *
  * E20 = Command does not exist
  * E21 = Parameter error
  * E22 = Location out of range
@@ -34,6 +35,12 @@
  * E25 = Operation failure
  */
 
+
+// empirical home position
+// these MUST be changed every time the arm is calibrated.
+const double HOME_X = 50.0;
+const double HOME_Y = 0.0;
+const double HOME_Z = 50.0;
 
 // number of seconds the uSwift has to say 'ok' in response to a command
 const double USB_RESPONSE_TIME = 0.001;
@@ -99,6 +106,28 @@ int usbWrite(std::string Gcode)
     return 0;
 }
 
+
+// an 'empty' command to go to home at HOME_X, HOME_Y, HOME_Z
+void home_callback(const std_msgs::Empty msg_in)
+{
+    char x[8];
+    char y[8];
+    char z[8];
+    char ms[8];
+    sprintf(x, "%.2f", HOME_X);
+    sprintf(y, "%.2f", HOME_Y);
+    sprintf(z, "%.2f", HOME_Z);
+    sprintf(ms, "%i", move_speed);
+
+    std::string Gcode = std::string("G0 X")
+        + x + " Y" + y + " Z" + z + " F" + ms + "\n";
+
+    ROS_DEBUG("Sending the uSwift to home.\n"
+              "Gcode: %s\n", Gcode.c_str());
+
+    usbWrite(Gcode);
+}
+
 void position_write_callback(const geometry_msgs::Point& msg_in)
 {
     char x[8];
@@ -118,7 +147,6 @@ void position_write_callback(const geometry_msgs::Point& msg_in)
 
     usbWrite(Gcode);
 }
-
 
 void cyl_position_write_callback(const geometry_msgs::Point& msg_in)
 {
@@ -161,6 +189,7 @@ void joint0_write_callback(const std_msgs::Float64& msg_in)
         usbWrite(Gcode);
     }
 }
+
 void joint1_write_callback(const std_msgs::Float64& msg_in)
 {
     if (abs(msg_in.data) > 0.001)
@@ -179,6 +208,7 @@ void joint1_write_callback(const std_msgs::Float64& msg_in)
         usbWrite(Gcode);
     }
 }
+
 void joint2_write_callback(const std_msgs::Float64& msg_in)
 {
     if (abs(msg_in.data) > 0.001)
@@ -197,23 +227,21 @@ void joint2_write_callback(const std_msgs::Float64& msg_in)
         usbWrite(Gcode);
     }
 }
+
 void joint3_write_callback(const std_msgs::Float64& msg_in)
 {
-    if (abs(msg_in.data) > 0.001)
-    {
-        char degree[8];
-        char joint[8];
-        char ms[8];
-        joint3 += msg_in.data;
-        sprintf(degree, "%.2f", msg_in.data);
-        sprintf(joint, "%.2f", joint3);
-        sprintf(ms, "%i", move_speed);
-        std::string Gcode = std::string("G2202 N3 V")
-          + joint + " F" + ms + "\n";
-        ROS_DEBUG("Sending joint3 command to the uSwift.\n"
-            "Gcode: %s\n", Gcode.c_str());
-        usbWrite(Gcode);
-    }
+    char degree[8];
+    char joint[8];
+    char ms[8];
+    joint3 += msg_in.data;
+    sprintf(degree, "%.2f", msg_in.data);
+    sprintf(joint, "%.2f", joint3);
+    sprintf(ms, "%i", move_speed);
+    std::string Gcode = std::string("G2202 N3 V")
+        + joint + " F" + ms + "\n";
+    ROS_DEBUG("Sending joint3 command to the uSwift.\n"
+              "Gcode: %s\n", Gcode.c_str());
+    usbWrite(Gcode);
 }
 
 
@@ -397,6 +425,8 @@ int main(int argc, char** argv)
     ros::Publisher us_actuator_on_pub = 
         nh.advertise<std_msgs::Bool>("actuator", 1);
 
+    ros::Subscriber home_sub = 
+        nh.subscribe("home", 1, home_callback);
     ros::Subscriber pos_sub = 
         nh.subscribe("position_write", 1, position_write_callback);
     ros::Subscriber pcy_sub = 
@@ -465,29 +495,13 @@ int main(int argc, char** argv)
         ROS_INFO("uSwift startup message: \n%s", result.c_str());
 
         // perform set up operations
-        ros::Duration(0.5).sleep();       // wait 0.5s
-        usb->write("G0 X50 Y0 Z50 F1000\n"); // move to the uncalibrated "home" position
-                                          // TODO: Learn how to calibrate this mugger
-                                          // Maybe have a command that sets home position??
-        ros::Duration(USB_RESPONSE_TIME).sleep();      // wait some
-        usb->flush();
-        result = usb->read(usb->available());
-        if (result[0] == 'E')
-        {
-            ROS_WARN("Received error from uSwift after the command %s:\n"
-                "%s", "G0 X50 Y0 Z50 F1000\n", result.c_str());
-        }
-        ros::Duration(0.1).sleep();     // wait 0.1s
-        usb->flush();
-        usb->write("G2202 N3 V90 F1000\n");  // move the claw to point straight
-        usb->flush();
-        ros::Duration(0.1).sleep();     // wait 0.1s
-        result = usb->read(usb->available());
-        if (result[0] == 'E')
-        {
-          ROS_WARN("Received error from uSwift after the command %s:\n"
-                   "%s", "G2202 N3 V90 F1000", result.c_str());
-        }
+        ros::Duration(0.5).sleep();        // wait 0.5s
+        home_callback(std_msgs::Empty());  // move to the "home"
+        ros::Duration(0.1).sleep();        // wait 0.1s
+        std_msgs::Float64 angle_tmp;
+        angle_tmp.data = 0.0;
+        joint3_write_callback(angle_tmp);
+        ros::Duration(0.1).sleep();        // wait 0.1s
 
         // Ask for position updates every pose_update_period seconds.
         char pus_msg[50];
@@ -495,37 +509,26 @@ int main(int argc, char** argv)
 
         ROS_INFO("Sending feedback command to the uSwift.\n"
             "Gcode: %s", pus_msg);
-        ros::Duration(0.1).sleep();     // wait 0.1s
-        usb->flush();
-        usb->write(pus_msg);
-        ros::Duration(pose_update_period).sleep(); // wait for an update?
-        usb->flush();
-        // ros::Duration(0.01).sleep();     // wait 0.01s
-        result = usb->read(usb->available());
-        if (result[0] == 'E')
-        {
-            ROS_WARN("Received error from uSwift after the command %s:\n"
-             "%s", pus_msg, result.c_str());
-        }
+        usbWrite(std::string(pus_msg));
 
-
+        // ---
         // initialize and start timers
 
         // the uSwift's position update timer
         // this is a 'best-effort' timing strategy
         ros::Timer pos_update_timer
             = nh.createTimer(
-                ros::Duration(pose_update_period), 
+                ros::Duration(pose_update_period),
                 state_read_callback);
 
         // program loop: wait for callbacks and publish when we are ready
         while (ros::ok())
         {
-            // update rosparams
-            nh.param<int>("move_speed", move_speed, MOVE_SPEED_DEFAULT);
-
             if (publish_uswift_state)
             {
+                // update rosparams in time to the state publisher
+                nh.param<int>("move_speed", move_speed, MOVE_SPEED_DEFAULT);
+
                 us_state_pub.publish(us_state);
                 us_pos_pub.publish(us_pos);
                 us_actuator_on_pub.publish(us_actuator_on);
