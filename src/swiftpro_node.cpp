@@ -117,7 +117,7 @@ void home_callback(const std_msgs::Empty msg_in)
     sprintf(x, "%.2f", HOME_X);
     sprintf(y, "%.2f", HOME_Y);
     sprintf(z, "%.2f", HOME_Z);
-    sprintf(ms, "%i", move_speed);
+    sprintf(ms, "%i", 400*move_speed); // ?
 
     std::string Gcode = std::string("G0 X")
         + x + " Y" + y + " Z" + z + " F" + ms + "\n";
