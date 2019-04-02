@@ -45,9 +45,6 @@ const double HOME_Z = 50.0;
 // number of seconds the uSwift has to say 'ok' in response to a command
 const double USB_RESPONSE_TIME = 0.001;
 
-// time delay between ROS spins
-const int ROS_SPIN_PERIOD = 0.001;
-
 // TODO: these are probably wrong
 const double JOINT0_INITIAL = 85.0;
 const double JOINT1_INITIAL = 117.0;
@@ -65,7 +62,7 @@ double joint3 = JOINT3_INITIAL;
 
 // how fast the move commands are executed on the uSwift
 // (10000 is fastest, 0 is slowest I guess)
-const int MOVE_SPEED_DEFAULT = 1000;
+const int MOVE_SPEED_DEFAULT = 25;
 int move_speed;
 
 // time between how often this node publishes a new state (secs)
@@ -139,7 +136,7 @@ void position_write_callback(const geometry_msgs::Point& msg_in)
     sprintf(z, "%.2f", msg_in.z);
     sprintf(ms, "%i", move_speed);
 
-    std::string Gcode = std::string("G0 X") 
+    std::string Gcode = std::string("G0 X")
         + x + " Y" + y + " Z" + z + " F" + ms + "\n";
 
     ROS_DEBUG("Sending a position command to the uSwift.\n"
@@ -247,8 +244,8 @@ void joint3_write_callback(const std_msgs::Float64& msg_in)
 
 void vector_write_callback(const geometry_msgs::Vector3& msg_in)
 {
-    if (abs(msg_in.x) > 0.001 || 
-        abs(msg_in.y) > 0.001 || 
+    if (abs(msg_in.x) > 0.001 ||
+        abs(msg_in.y) > 0.001 ||
         abs(msg_in.z) > 0.001)
     {
         char x[8];
@@ -397,15 +394,35 @@ void state_read_callback(const ros::TimerEvent&)
 }
 
 
-/* 
+/*
  * Node name: pnr_core
- *   
  *
  * Topics published: (rate = 20Hz, queue size = 1)
- *   
+ * - /pnr_swiftpro/
+ *     /state - position info, plus actuator status
+ *     /position - position of the end-effector
+ *     /actuator - actuator status (true = open, false = closed)
  *
- * Topics subscribed: (queue size = 1)
- *   
+ * Topics subscribed: (queue size = 1 for all)
+ * - /pnr_swiftpro
+ *     /position_write
+ *     /cyl_position_write
+ *     /vector_write
+ *     /cyl_vector_write
+ *     /actuator_write
+ *     /joint0_write
+ *     /joint1_write
+ *     /joint2_write
+ *     /joint3_write
+ *
+ * Parameters accepted:
+ * - /pnr_swiftpro
+ *     /port = (string) the port of the swiftpro
+ *       (default = "/dev/ttyACM0")
+ *     /move_speed (int) the speed of the move commands
+ *       (default = 25, range = [1, 10000])
+ *     /pose_update_period = (double) state publish update period
+ *       (default = 0.2)
  */
 int main(int argc, char** argv)
 {
@@ -534,10 +551,8 @@ int main(int argc, char** argv)
                 us_actuator_on_pub.publish(us_actuator_on);
                 publish_uswift_state = false;
             }
-
+            // you spin me right round baby right round
             ros::spinOnce();
-
-            ros::Duration(ROS_SPIN_PERIOD).sleep();
         }
     }
 
